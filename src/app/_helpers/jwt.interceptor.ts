@@ -1,24 +1,28 @@
 import { Injectable } from '@angular/core';
 import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor } from '@angular/common/http';
 import { Observable } from 'rxjs';
-
-import { environment } from '@environments/environment';
-import { AccountService } from '@app/_services';
+import { environment } from '../../environments/environment';
 
 @Injectable()
 export class JwtInterceptor implements HttpInterceptor {
-    constructor(private accountService: AccountService) { }
-
     intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-        // add auth header with jwt if a stored user exists and request is to the api url
-        const storedUser = localStorage.getItem('user');
-        const account = storedUser ? JSON.parse(storedUser) : this.accountService.accountValue;
-        const isLoggedIn = !!account?.jwtToken;
+        // 1. Manually bypass the service and check local storage directly
+        const userString = localStorage.getItem('user');
+        let token = null;
+
+        if (userString) {
+            try {
+                const user = JSON.parse(userString);
+                token = user.jwtToken;
+            } catch (e) {}
+        }
+
         const isApiUrl = request.url.startsWith(environment.apiUrl);
 
-        if (isLoggedIn && isApiUrl) {
+        // 2. Explicitly attach the Bearer header if we have the token
+        if (token && isApiUrl) {
             request = request.clone({
-                setHeaders: { Authorization: `Bearer ${account.jwtToken}` }
+                setHeaders: { Authorization: `Bearer ${token}` }
             });
         }
 
