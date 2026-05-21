@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
 
 @Injectable()
 export class JwtInterceptor implements HttpInterceptor {
@@ -17,10 +16,8 @@ export class JwtInterceptor implements HttpInterceptor {
             } catch (e) {}
         }
 
-        const isApiUrl = request.url.startsWith(environment.apiUrl);
-
         // 2. Explicitly attach the Bearer header if we have the token
-        if (token && isApiUrl) {
+        if (token) {
             request = request.clone({
                 setHeaders: { Authorization: `Bearer ${token}` }
             });
