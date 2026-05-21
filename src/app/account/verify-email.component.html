@@ -1,0 +1,10 @@
+<h3 class="card-header">Verify Email</h3>
+<div class="card-body">
+    <ng-container *ngIf="emailStatus === EmailStatus.Verifying">
+        <div>Verifying email...</div>
+    </ng-container>
+    <ng-container *ngIf="emailStatus === EmailStatus.Failed">
+        <div>Verification failed, you can also verify your account using the <a routerLink="../forgot-password">forgot
+                password</a> page.</div>
+    </ng-container>
+</div>

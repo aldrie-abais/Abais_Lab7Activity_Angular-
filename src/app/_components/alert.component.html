@@ -1,0 +1,8 @@
+<div class="m-3">
+    @for (alert of alerts; track alert) {
+    <div class="{{alert.cssClass}} alert-dismissible mt-4 mb-0">
+        <span [innerHTML]="alert.message"></span>
+        <button type="button" class="btn-close" (click)="removeAlert(alert)"></button>
+    </div>
+    }
+</div>
