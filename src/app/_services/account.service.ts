@@ -18,7 +18,8 @@ export class AccountService {
         private router: Router,
         private http: HttpClient
     ) {
-        this.accountSubject = new BehaviorSubject<Account | null>(null);
+        const storedAccount = localStorage.getItem('account');
+        this.accountSubject = new BehaviorSubject<Account | null>(storedAccount ? JSON.parse(storedAccount) : null);
         this.account = this.accountSubject.asObservable();
     }
 
@@ -27,77 +28,81 @@ export class AccountService {
     }
 
     login(email: string, password: string) {
-        return this.http.post<any>(`${baseUrl}/authenticate`, { email, password })
+        return this.http.post<any>(`${baseUrl}/authenticate`, { email, password }, { withCredentials: true })
             .pipe(map(account => {
                 this.accountSubject.next(account);
+                localStorage.setItem('account', JSON.stringify(account));
                 this.startRefreshTokenTimer();
                 return account;
             }));
     }
 
     logout() {
-        this.http.post(`${baseUrl}/revoke-token`, {}).subscribe();
+        this.http.post(`${baseUrl}/revoke-token`, {}, { withCredentials: true }).subscribe();
         this.stopRefreshTokenTimer();
         this.accountSubject.next(null);
+        localStorage.removeItem('account');
         this.router.navigate(['/account/login']);
     }
 
     refreshToken() {
-        return this.http.post<any>(`${baseUrl}/refresh-token`, {})
+        return this.http.post<any>(`${baseUrl}/refresh-token`, {}, { withCredentials: true })
             .pipe(map(account => {
                 this.accountSubject.next(account);
+                localStorage.setItem('account', JSON.stringify(account));
                 this.startRefreshTokenTimer();
                 return account;
             }));
     }
 
     register(params: any) {
-        return this.http.post(`${baseUrl}/register`, params);
+        return this.http.post(`${baseUrl}/register`, params, { withCredentials: true });
     }
 
     verifyEmail(token: string) {
-        return this.http.post(`${baseUrl}/verify-email`, { token });
+        return this.http.post(`${baseUrl}/verify-email`, { token }, { withCredentials: true });
     }
 
     forgotPassword(email: string) {
-        return this.http.post(`${baseUrl}/forgot-password`, { email });
+        return this.http.post(`${baseUrl}/forgot-password`, { email }, { withCredentials: true });
     }
 
     validateResetToken(token: string) {
-        return this.http.post(`${baseUrl}/validate-reset-token`, { token });
+        return this.http.post(`${baseUrl}/validate-reset-token`, { token }, { withCredentials: true });
     }
 
     resetPassword(token: string, password: string) {
-        return this.http.post(`${baseUrl}/reset-password`, { token, password });
+        return this.http.post(`${baseUrl}/reset-password`, { token, password }, { withCredentials: true });
     }
 
     getAll() {
-        return this.http.get<Account[]>(baseUrl);
+        return this.http.get<Account[]>(baseUrl, { withCredentials: true });
     }
 
     getById(id: string) {
-        return this.http.get<Account>(`${baseUrl}/${id}`);
+        return this.http.get<Account>(`${baseUrl}/${id}`, { withCredentials: true });
     }
 
     create(params: any) {
-        return this.http.post(baseUrl, params);
+        return this.http.post(baseUrl, params, { withCredentials: true });
     }
 
     update(id: string, params: any) {
-        return this.http.put(`${baseUrl}/${id}`, params)
+        return this.http.put(`${baseUrl}/${id}`, params, { withCredentials: true })
             .pipe(map((x: any) => {
                 // update stored account if the logged in account updated their own record
                 if (id === this.accountValue?.id) {
                     // publish updated account to subscribers
                     const account = { ...this.accountValue, ...params };
                     this.accountSubject.next(account);
+                    localStorage.setItem('account', JSON.stringify(account));
                 }
                 return x;
             }));
     }
 
     delete(id: string) {
-        return this.http.delete(`${baseUrl}/${id}`)
+        return this.http.delete(`${baseUrl}/${id}`, { withCredentials: true })
             .pipe(map(x => {
                 // auto logout if the logged in account was deleted
                 if (id === this.accountValue?.id) {
