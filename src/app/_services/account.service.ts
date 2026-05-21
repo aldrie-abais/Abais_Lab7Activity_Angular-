@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -38,7 +38,7 @@ export class AccountService {
     }
 
     logout() {
-        this.http.post(`${baseUrl}/revoke-token`, {}, { withCredentials: true }).subscribe();
+        this.http.post(`${baseUrl}/revoke-token`, {}, this.authOptions()).subscribe();
         this.stopRefreshTokenTimer();
         this.accountSubject.next(null);
         localStorage.removeItem('user');
@@ -46,7 +46,7 @@ export class AccountService {
     }
 
     refreshToken() {
-        return this.http.post<any>(`${baseUrl}/refresh-token`, {}, { withCredentials: true })
+        return this.http.post<any>(`${baseUrl}/refresh-token`, {}, this.authOptions())
             .pipe(map(account => {
                 this.accountSubject.next(account);
                 localStorage.setItem('user', JSON.stringify(account));
@@ -76,19 +76,19 @@ export class AccountService {
     }
 
     getAll() {
-        return this.http.get<Account[]>(baseUrl, { withCredentials: true });
+        return this.http.get<Account[]>(baseUrl, this.authOptions());
     }
 
     getById(id: string) {
-        return this.http.get<Account>(`${baseUrl}/${id}`, { withCredentials: true });
+        return this.http.get<Account>(`${baseUrl}/${id}`, this.authOptions());
     }
 
     create(params: any) {
-        return this.http.post(baseUrl, params, { withCredentials: true });
+        return this.http.post(baseUrl, params, this.authOptions());
     }
 
     update(id: string, params: any) {
-        return this.http.put(`${baseUrl}/${id}`, params, { withCredentials: true })
+        return this.http.put(`${baseUrl}/${id}`, params, this.authOptions())
             .pipe(map((x: any) => {
                 // update stored account if the logged in account updated their own record
                 if (id === this.accountValue?.id) {
@@ -102,7 +102,7 @@ export class AccountService {
     }
 
     delete(id: string) {
-        return this.http.delete(`${baseUrl}/${id}`, { withCredentials: true })
+        return this.http.delete(`${baseUrl}/${id}`, this.authOptions())
             .pipe(map(x => {
                 // auto logout if the logged in account was deleted
                 if (id === this.accountValue?.id) {
@@ -128,5 +128,18 @@ export class AccountService {
 
     private stopRefreshTokenTimer() {
         clearTimeout(this.refreshTokenTimeout);
+    }
+
+    private authOptions() {
+        const storedAccount = localStorage.getItem('user');
+        const account = storedAccount ? JSON.parse(storedAccount) : this.accountValue;
+        const token = account?.jwtToken;
+
+        const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
+
+        return {
+            withCredentials: true,
+            headers
+        };
     }
 }
