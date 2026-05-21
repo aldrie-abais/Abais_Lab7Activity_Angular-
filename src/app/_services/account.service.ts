@@ -18,7 +18,7 @@ export class AccountService {
         private router: Router,
         private http: HttpClient
     ) {
-        const storedAccount = localStorage.getItem('account');
+        const storedAccount = localStorage.getItem('user');
         this.accountSubject = new BehaviorSubject<Account | null>(storedAccount ? JSON.parse(storedAccount) : null);
         this.account = this.accountSubject.asObservable();
     }
@@ -31,7 +31,7 @@ export class AccountService {
         return this.http.post<any>(`${baseUrl}/authenticate`, { email, password }, { withCredentials: true })
             .pipe(map(account => {
                 this.accountSubject.next(account);
-                localStorage.setItem('account', JSON.stringify(account));
+                localStorage.setItem('user', JSON.stringify(account));
                 this.startRefreshTokenTimer();
                 return account;
             }));
@@ -41,7 +41,7 @@ export class AccountService {
         this.http.post(`${baseUrl}/revoke-token`, {}, { withCredentials: true }).subscribe();
         this.stopRefreshTokenTimer();
         this.accountSubject.next(null);
-        localStorage.removeItem('account');
+        localStorage.removeItem('user');
         this.router.navigate(['/account/login']);
     }
 
@@ -49,7 +49,7 @@ export class AccountService {
         return this.http.post<any>(`${baseUrl}/refresh-token`, {}, { withCredentials: true })
             .pipe(map(account => {
                 this.accountSubject.next(account);
-                localStorage.setItem('account', JSON.stringify(account));
+                localStorage.setItem('user', JSON.stringify(account));
                 this.startRefreshTokenTimer();
                 return account;
             }));
@@ -95,7 +95,7 @@ export class AccountService {
                     // publish updated account to subscribers
                     const account = { ...this.accountValue, ...params };
                     this.accountSubject.next(account);
-                    localStorage.setItem('account', JSON.stringify(account));
+                    localStorage.setItem('user', JSON.stringify(account));
                 }
                 return x;
             }));
