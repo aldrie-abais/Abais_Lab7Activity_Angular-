@@ -2,6 +2,7 @@ export class Alert {
     id?: string;
     type?: AlertType;
     message?: string;
+    cssClass?: string;
     autoClose?: boolean;
     keepAfterRouteChange?: boolean;
     fade?: boolean;

@@ -4,7 +4,7 @@ import { first } from 'rxjs/operators';
 
 import { AccountService, AlertService } from '@app/_services';
 
-@Component({ templateUrl: 'forgot-password.component.html' })
+@Component({ templateUrl: 'forgot-password.component.html', standalone: false })
 export class ForgotPasswordComponent implements OnInit {
     form!: FormGroup;
     loading = false;
