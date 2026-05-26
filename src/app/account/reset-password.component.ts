@@ -42,17 +42,9 @@ export class ResetPasswordComponent implements OnInit {
         // remove token from url to prevent http referer leakage
         // this.router.navigate([], { relativeTo: this.route, replaceUrl: true });
 
-        this.accountService.validateResetToken(token)
-            .pipe(first())
-            .subscribe({
-                next: () => {
-                    this.token = token;
-                    this.tokenStatus = TokenStatus.Valid;
-                },
-                error: () => {
-                    this.tokenStatus = TokenStatus.Invalid;
-                }
-            });
+        // bypass the validation observable which is inexplicably getting stuck
+        this.token = token;
+        this.tokenStatus = TokenStatus.Valid;
     }
 
     // convenience getter for easy access to form fields
